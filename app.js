@@ -2,7 +2,7 @@
 
 var express = require('express');
 var app = express();
-var routes = require('./routes');
+var routes = require('./routes/wiki.js');
 var morgan = require('morgan');
 var swig = require('swig');
 var path = require('path');
@@ -15,7 +15,7 @@ swig.setDefaults({cache: false});
 
 app.use(morgan('dev'));
 
-app.use("/", routes);
+app.use("/wiki", routes);
 
 app.use(express.static(path.join(__dirname,'/public')));
 
