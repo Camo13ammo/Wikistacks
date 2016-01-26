@@ -19,11 +19,10 @@ router.post("/", function(req, res, next) {
 		title: req.body.title,
 		content: req.body.content
 	});
-	console.log(req.method);
+
 	page.save().then(function(success) {
-		res.redirect('/');
+		res.json(success);
 	}, function(err) {
-		console.log(err);
 		res.render('error', {
 			status: '400',
 			error: err
