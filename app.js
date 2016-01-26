@@ -15,6 +15,10 @@ swig.setDefaults({cache: false});
 
 app.use(morgan('dev'));
 
+app.get('/', function(req, res, next) {
+	res.render('index');
+})
+
 app.use("/wiki", routes);
 
 app.use(express.static(path.join(__dirname,'/public')));
