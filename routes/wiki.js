@@ -11,13 +11,18 @@ router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 
 router.get("/", function(req, res, next){
-	res.redirect('/');	
+	Page.find().exec().then(function(foundPages) {
+		res.render('index', {
+			pages: foundPages
+		});
+	});
 });
 
 router.post("/", function(req, res, next) {
 	var page = new Page({
 		title: req.body.title,
-		content: req.body.content
+		content: req.body.content,
+		tagsStr: req.body.tags
 	});
 
 	page.save().then(function(success) {
@@ -34,6 +39,10 @@ router.get("/add", function(req, res, next) {
 	res.render('addpage', {
 			
 	});
+});
+
+router.get('/search', function(req, res, next) {
+	var tags = req.query.tagSearch;
 });
 
 router.get("/:urlTitle", function(req, res, next) {

@@ -12,22 +12,38 @@ var convert = function(title){
 	}
 }
 
+var tagsConvert = function(tagsStr){
+	return tagsStr.split(" ");
+}
+
 var pageSchema = new mongoose.Schema({
 	title: {type: String, required: true},
 	urlTitle: {type: String, required: true},
 	content: {type: String, required: true},
 	date: {type: Date, default: Date.now},
 	status: {type: String, enum: ['open', 'closed']},
+	tagsStr: String,
+	tags: [String],
 	author: {type: mongoose.Schema.Types.ObjectId, ref: 'User'}
 });
 
+pageSchema.statics.findByTag = function(tag) {
+	return this.find({ tags: {$elemMatch: { $eq: tag } } } ).exec();
+};
+
 //save is attaching this hook to .save() to make sure we do this first before a save.
+//were using 'validate' because it validates before saving
 pageSchema.pre('validate', function(next){
 	console.log('This is the save console log');
 	
 	this.urlTitle = convert(this.title);
 	next();
 });
+
+pageSchema.pre('validate', function(next){
+	this.tags = tagsConvert(this.tagsStr);
+	next();
+})
 
 pageSchema.virtual('route').get(function() {
 	return '/wiki/' + this.urlTitle;

@@ -5,6 +5,7 @@ var app = express();
 var routes = require('./routes/wiki.js');
 var morgan = require('morgan');
 var swig = require('swig');
+var filter = require('./filters')(swig)
 var path = require('path');
 
 // Initialize SWIG
