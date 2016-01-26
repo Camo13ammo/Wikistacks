@@ -11,7 +11,7 @@ router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 
 router.get("/", function(req, res, next){
-	res.redirect('/');
+	res.redirect('/');	
 });
 
 router.post("/", function(req, res, next) {
@@ -21,7 +21,7 @@ router.post("/", function(req, res, next) {
 	});
 
 	page.save().then(function(success) {
-		res.json(success);
+		res.redirect(success.route);
 	}, function(err) {
 		res.render('error', {
 			status: '400',
@@ -34,6 +34,28 @@ router.get("/add", function(req, res, next) {
 	res.render('addpage', {
 			
 	});
+});
+
+router.get("/:urlTitle", function(req, res, next) {
+	var url = req.params.urlTitle;
+	Page.findOne({'urlTitle': url}).exec()
+	.then(function(success){
+		if (success == null) {
+			res.render('error', {
+				status: '404',
+				error: {
+					message: "Page was not found!",
+					stack: "The url entered was not a valid page."
+				}
+			});
+		} else {
+			res.render('wikipage', {
+				page: success
+			});
+
+		}
+	});
+
 });
 
 module.exports = router;
