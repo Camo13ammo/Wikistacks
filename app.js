@@ -2,7 +2,8 @@
 
 var express = require('express');
 var app = express();
-var routes = require('./routes/wiki.js');
+var routeswiki = require('./routes/wiki.js');
+var routesusers = require('./routes/user.js')
 var morgan = require('morgan');
 var swig = require('swig');
 var filter = require('./filters')(swig)
@@ -20,7 +21,8 @@ app.get('/', function(req, res, next) {
 	res.render('index');
 })
 
-app.use("/wiki", routes);
+app.use("/wiki", routeswiki);
+app.use("/users", routesusers);
 
 app.use(express.static(path.join(__dirname,'/public')));
 

@@ -1,20 +1,15 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/wikistack');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'mongodb connection error:'));
 
-var convert = function(title){
-	if(title){
-		return title.replace(/[^a-z0-9 ]/gi, "").replace(/[ ]/g, "_");
-	}
-	else{
-		return Math.random().toString(36).substring(2,7);
-	}
+if(process.env.NODE_ENV === "testing"){
+	mongoose.connect('mongodb://localhost/Testwikistack');
+}
+else{
+	mongoose.connect('mongodb://localhost/wikistack');
 }
 
-var tagsConvert = function(tagsStr){
-	return tagsStr.split(" ");
-}
+
 
 var pageSchema = new mongoose.Schema({
 	title: {type: String, required: true},
@@ -22,17 +17,58 @@ var pageSchema = new mongoose.Schema({
 	content: {type: String, required: true},
 	date: {type: Date, default: Date.now},
 	status: {type: String, enum: ['open', 'closed']},
-	tagsStr: String,
 	tags: [String],
 	author: {type: mongoose.Schema.Types.ObjectId, ref: 'User'}
 });
 
+var userSchema = new mongoose.Schema({
+	name: {type: String, required: true},
+	email: {type: String, required: true, unique: true}
+})
+
+var convert = function(title){
+	if(title){
+		return title.replace(/[^a-z0-9 ]/gi, "").replace(/[]/g, "_");
+	}
+	else{
+		return Math.random().toString(36).substring(2,7);
+	}
+}
+
+userSchema.statics.findOrCreate = function(userInfo){
+	var self = this;
+	return this.findOne({email: userInfo.email }).exec()
+		.then(function(user){
+			if(user === null){
+				return self.create(userInfo);
+			}
+			else  {
+				return user;
+			}
+		});
+			
+}
+
 pageSchema.statics.findByTag = function(tag) {
 	return this.find({ tags: {$elemMatch: { $eq: tag } } } ).exec();
+	// return this.find({
+	// 	tags: {
+	// 		$in: [tag]
+	// 	}
+	// }).exec();
 };
 
-//save is attaching this hook to .save() to make sure we do this first before a save.
-//were using 'validate' because it validates before saving
+pageSchema.methods.findSimilar = function() {	
+	return Page.find({
+		tags: {
+			$in: this.tags
+		},
+		_id: {
+			$ne: this.id
+		}
+	}).exec();
+}
+
 pageSchema.pre('validate', function(next){
 	console.log('This is the save console log');
 	
@@ -40,19 +76,11 @@ pageSchema.pre('validate', function(next){
 	next();
 });
 
-pageSchema.pre('validate', function(next){
-	this.tags = tagsConvert(this.tagsStr);
-	next();
-})
-
 pageSchema.virtual('route').get(function() {
 	return '/wiki/' + this.urlTitle;
 });
 
-var userSchema = new mongoose.Schema({
-	name: {type: String, required: true},
-	email: {type: String, required: true, unique: true}
-})
+
 
 var Page = mongoose.model('Page', pageSchema);
 var User = mongoose.model('User', userSchema);
